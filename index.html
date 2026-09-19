@@ -137,6 +137,32 @@ button{font:inherit;color:inherit}
   background:var(--warn-bg);border-radius:999px;padding:2px 9px}
 .dp.na .v b{color:var(--ink-3);font-size:1.25rem}
 
+/* 甜蜜點、持有成本、划算試算 */
+.sweet{border-left:3px solid var(--brand);background:var(--brand-soft);border-radius:0 8px 8px 0;
+  padding:12px 14px;margin-top:12px;font-size:.9375rem;line-height:1.6}
+.own-in{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;margin-top:14px}
+.own-in .fgroup{min-width:220px;flex:1 1 220px}
+.own-in input[type=range]{width:100%;accent-color:var(--brand);height:26px;margin:0}
+.own-sum{margin-top:14px;font-size:.9375rem;line-height:1.65}
+tr.best td{background:var(--brand-soft)}
+tr.best td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
+td.flags{text-align:left;white-space:normal;min-width:130px;font-family:var(--f-body)}
+.flag{display:inline-block;font-size:.6875rem;color:var(--ink-2);background:var(--sunk);
+  border-radius:999px;padding:1px 7px;margin:1px 3px 1px 0;white-space:nowrap}
+.flag.hot{color:var(--warn-ink);background:var(--warn-bg)}
+.flag.best{color:var(--surface);background:var(--brand)}
+.deal-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-top:14px}
+.deal-form label{display:flex;flex-direction:column;gap:4px;font-size:.8125rem;color:var(--ink-2);min-width:0}
+.deal-form input,.deal-form select{font-family:var(--f-mono);font-size:.9375rem;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:7px 9px;width:100%;min-width:0}
+.deal-out{display:grid;gap:10px;margin-top:16px}
+.verdict{justify-self:start;font-weight:700;font-size:.9375rem;border-radius:999px;padding:4px 12px}
+.verdict.low{background:color-mix(in srgb,var(--s2) 14%,transparent);color:var(--s2)}
+.verdict.fair{background:var(--sunk);color:var(--ink)}
+.verdict.high{background:var(--brand-soft);color:var(--brand)}
+.deal-out .line{font-size:.9375rem;line-height:1.6}
+.deal-out .line b{font-family:var(--f-mono)}
+
 .chart{position:relative;margin-top:12px;min-height:220px}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:.8125rem;color:var(--ink-2)}
@@ -225,6 +251,61 @@ footer p+p{margin-top:6px}
           <div class="dp" id="dp-km"></div>
         </div>
         <p class="note" id="dp-note"></p>
+      </section>
+
+      <section class="card" aria-live="polite">
+        <h2>折舊曲線：幾年的車最划算</h2>
+        <p class="sub" id="cv-sub"></p>
+        <div class="sweet" id="cv-sweet"></div>
+        <div class="chart" id="c-age"></div>
+        <div class="legend">
+          <span><i class="lg-dot"></i>各車齡的相對價格</span>
+          <span><i class="lg-hollow"></i>樣本少於 5 台</span>
+          <span><i class="lg-line"></i>標紅的跌幅＝明顯高於同世代的正常跌幅</span>
+        </div>
+        <p class="note" id="cv-note"></p>
+      </section>
+
+      <section class="card">
+        <h2>持有成本試算</h2>
+        <p class="sub">買進某個車齡的車，開幾年後賣掉，平均每年花掉多少。</p>
+        <div class="own-in">
+          <div class="fgroup">
+            <div class="flabel">打算開幾年</div>
+            <div class="chips" id="f-hold" role="group" aria-label="持有年數">
+              <button type="button" class="chip" data-v="1">1 年</button>
+              <button type="button" class="chip" data-v="2">2 年</button>
+              <button type="button" class="chip" data-v="3">3 年</button>
+              <button type="button" class="chip" data-v="4">4 年</button>
+              <button type="button" class="chip" data-v="5">5 年</button>
+            </div>
+          </div>
+          <div class="fgroup slider">
+            <label for="ak"><span>每年開多少公里</span><output id="ak-out" for="ak"></output></label>
+            <input type="range" id="ak" min="0.5" max="4" step="0.5" value="1.5">
+          </div>
+        </div>
+        <p class="own-sum" id="own-sum"></p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>買入</th><th>買價</th><th id="own-sell-h">賣價</th><th>每年成本</th><th>佔買價／年</th><th style="text-align:left">備註</th></tr></thead>
+            <tbody id="own-body"></tbody>
+          </table>
+        </div>
+        <p class="note" id="own-note"></p>
+      </section>
+
+      <section class="card">
+        <h2>這台划算嗎</h2>
+        <p class="sub">輸入你看中的那台車，和同條件的在售車比一比。</p>
+        <div class="deal-form">
+          <label>年份<select id="d-year"></select></label>
+          <label>里程（萬公里）<input id="d-km" type="number" min="0" max="40" step="0.1" inputmode="decimal"></label>
+          <label>車型<select id="d-fam"></select></label>
+          <label>配備<select id="d-adas"></select></label>
+          <label>開價（萬）<input id="d-price" type="number" min="10" max="800" step="0.1" inputmode="decimal"></label>
+        </div>
+        <div class="deal-out" id="deal-out" aria-live="polite"></div>
       </section>
 
       <section class="card">
@@ -325,7 +406,7 @@ footer p+p{margin-top:6px}
   }
 
   /* ---------- 狀態：網址 hash 優先，其次本機記憶，最後是預設值 ---------- */
-  const DEFAULT = { m: 0, y: "all", f: "all", a: "all", g: "all", s: "all", w: null, k: null };
+  const DEFAULT = { m: 0, y: "all", f: "all", a: "all", g: "all", s: "all", w: null, k: null, h: 3, ak: 1.5 };
   const state = { ...DEFAULT };
   function readState(){
     Object.assign(state, DEFAULT);
@@ -340,13 +421,16 @@ footer p+p{margin-top:6px}
     if (state.m >= D.models.length) state.m = 0;
     state.w = state.w ? Number(state.w) : null;
     state.k = state.k ? Number(state.k) : null;
+    state.h = Math.min(5, Math.max(1, Number(state.h) || 3));
+    state.ak = Math.min(4, Math.max(0.5, Number(state.ak) || 1.5));
   }
   function writeState(){
     const o = { m: D.models[state.m], y: state.y, f: state.f, a: state.a, g: state.g, s: state.s,
-                w: state.w, k: state.k };
+                w: state.w, k: state.k, h: state.h, ak: state.ak };
     const p = new URLSearchParams();
     if (KEY) p.set("key", KEY);          // 改條件時不能把鑰匙洗掉，否則複製網址分享會變成打不開
-    for (const [k, v] of Object.entries(o)) if (v != null && v !== "all") p.set(k, v);
+    for (const [k, v] of Object.entries(o))
+      if (v != null && v !== "all" && !(k in DEFAULT && k !== "m" && v === DEFAULT[k])) p.set(k, v);
     try { history.replaceState(null, "", "#" + p.toString()); } catch (e) {}
     try { localStorage.setItem("ct-web-state", JSON.stringify(o)); } catch (e) {}
   }
@@ -442,6 +526,14 @@ footer p+p{margin-top:6px}
     update();
   });
   $("km").addEventListener("input", e => { state.k = Number(e.target.value); renderResults(); writeState(); });
+  $("f-hold").addEventListener("click", e => {
+    const b = e.target.closest("button.chip");
+    if (!b) return;
+    state.h = Number(b.dataset.v); renderOwnership(); writeState();
+  });
+  $("ak").addEventListener("input", e => { state.ak = Number(e.target.value); renderOwnership(); writeState(); });
+  for (const id of ["d-year", "d-km", "d-fam", "d-adas", "d-price"])
+    $(id).addEventListener("input", () => renderDealResult());
 
   /* ---------- 結果 ---------- */
   const W = () => state.w * 1e4;
@@ -463,6 +555,8 @@ footer p+p{margin-top:6px}
     slider.value = state.k;
     renderResults();
     renderDepreciation();
+    renderSweet();
+    renderDeal();
     writeState();
   }
 
@@ -526,8 +620,10 @@ footer p+p{margin-top:6px}
     }
   }
 
+  let lastDep = null;                                   // 車齡曲線要借用這裡的同世代年跌率
   function renderDepreciation(){
     const est = estimateDepreciation();
+    lastDep = est;
     const selMed = stats(rowsFor(LATEST)).med || stats(est.rows).med;
     const box = (id, label, idx) => {
       const el = $(id);
@@ -563,6 +659,347 @@ footer p+p{margin-top:6px}
         ? `已排除${est.controls.join("、")}差異的影響，`
         : "")
       + "數字是「其他條件相同時」多一年、多一萬公里的開價差距。這是在售車開價之間的統計關係，實際成交與個別車況會有出入。";
+  }
+
+  /* ---------- 車齡曲線 ----------
+     ln(開價) = a + c·里程 + Σ 各車齡的虛擬變數 + 控制項
+     每個車齡各自一個係數，不假設每年跌幅相同，才看得出曲線在哪裡轉平。
+     樣本少於 3 台的車齡不估；控制項預測時取樣本平均（反映目前條件下的車型組成）。 */
+  const ageOf = r => SNAP_YEAR - r.year;
+  const medianOf = arr => q([...arr].sort((a, b) => a - b), .5);
+  const BATTERY_YEARS = 8;                              // Tesla 電池保固多為 8 年（里程上限依車型而異）
+
+  function fitCurve(rows, keys){
+    const cnt = new Map();
+    rows.forEach(r => cnt.set(ageOf(r), (cnt.get(ageOf(r)) || 0) + 1));
+    const ages = [...cnt.keys()].filter(a => cnt.get(a) >= 3).sort((a, b) => a - b);
+    const use = rows.filter(r => cnt.get(ageOf(r)) >= 3);
+    if (ages.length < 2) return null;
+    keys = [...keys];
+    while (true){
+      const ctl = [];
+      for (const key of keys){
+        const c = new Map();
+        use.forEach(r => c.set(r[key], (c.get(r[key]) || 0) + 1));
+        const base = [...c.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        for (const lv of c.keys()) if (lv !== base) ctl.push({ key, lv });
+      }
+      const X = use.map(r => [1, r.km / 1e4, ...ages.slice(1).map(a => ageOf(r) === a ? 1 : 0),
+                                ...ctl.map(c => r[c.key] === c.lv ? 1 : 0)]);
+      if (use.length - X[0].length >= 10){
+        const y = use.map(r => Math.log(r.price));
+        const fit = ols(X, y);
+        if (fit){
+          const off = 1 + ages.length;
+          const mean = ctl.map(c => use.filter(r => r[c.key] === c.lv).length / use.length);
+          const present = Object.fromEntries(keys.map(k => [k, new Set(use.map(r => r[k]))]));
+          const resid = X.map((xi, i) => y[i] - xi.reduce((s, v, j) => s + v * fit.beta[j], 0))
+                         .sort((a, b) => a - b);
+          return {
+            n: use.length, ages, cnt, keys, fit, resid,
+            idx: new Map(ages.map((a, i) => [a, i ? fit.beta[1 + i] : 0])),
+            typicalKm: new Map(ages.map(a => [a, medianOf(use.filter(r => ageOf(r) === a).map(r => r.km))])),
+            // 指定了類別就用該類別的係數；沒指定（或樣本裡沒有）就用樣本平均
+            ctlLog(levels){
+              let v = 0;
+              ctl.forEach((c, j) => {
+                const b = fit.beta[off + j], lv = levels ? levels[c.key] : null;
+                v += (lv != null && present[c.key].has(lv)) ? (lv === c.lv ? b : 0) : b * mean[j];
+              });
+              return v;
+            },
+          };
+        }
+      }
+      if (!keys.length) return null;
+      keys = keys.slice(0, -1);
+    }
+  }
+
+  // 資料裡有的車齡用估計值；夾在中間的線性內插；超出範圍用同世代年跌率外推
+  function ageIndex(cv, a, slope){
+    if (cv.idx.has(a)) return { v: cv.idx.get(a), kind: "data" };
+    const lo = cv.ages.filter(x => x < a).pop(), hi = cv.ages.find(x => x > a);
+    if (lo != null && hi != null)
+      return { v: cv.idx.get(lo) + (cv.idx.get(hi) - cv.idx.get(lo)) * (a - lo) / (hi - lo), kind: "interp" };
+    if (slope == null) return null;
+    const ref = lo != null ? lo : hi;
+    return { v: cv.idx.get(ref) + slope * (a - ref), kind: "extrap" };
+  }
+  function priceAt(cv, a, km, slope, levels){
+    const ai = ageIndex(cv, a, slope);
+    if (!ai) return null;
+    return { p: Math.exp(cv.fit.beta[0] + cv.fit.beta[1] * km / 1e4 + ai.v + cv.ctlLog(levels)), kind: ai.kind };
+  }
+
+  /* 甜蜜點＝轉折點：從這個車齡往後，每一段的年化跌幅都不明顯高於同世代的正常跌幅
+     （門檻：正常跌幅的 1.25 倍與「正常 + 2 個百分點」取大者）。只用樣本 ≥ 5 台的車齡，
+     且至少要有三個這樣的車齡，才算得出兩段以上的變化。
+     「每年花最少錢」不能當甜蜜點——那永遠是最舊的車，因為車價本來就低。 */
+  function findKnee(cv, slope){
+    if (slope == null) return { age: null, reason: "few" };
+    const rate = -Math.expm1(slope), thr = Math.max(rate * 1.25, rate + 0.02);
+    const good = cv.ages.filter(a => cv.cnt.get(a) >= 5);
+    const steps = good.slice(1).map((b, i) => {
+      const a = good[i];
+      return { a, b, d: 1 - Math.exp((cv.idx.get(b) - cv.idx.get(a)) / (b - a)) };
+    });
+    if (good.length < 3) return { age: null, rate, thr, steps, reason: "few" };
+    for (let i = 0; i < good.length - 1; i++)
+      if (steps.slice(i).every(s => s.d <= thr)) return { age: good[i], rate, thr, steps };
+    return { age: null, rate, thr, steps, reason: "none" };
+  }
+
+  let sweet = null;                                     // 目前條件下的車齡曲線與甜蜜點
+  function renderSweet(){
+    const rows = rowsFor(LATEST, "y");
+    const keys = [["f", "fam"], ["a", "adas"], ["s", "src"]].filter(([f]) => state[f] === "all").map(x => x[1]);
+    const cv = rows.length >= 12 ? fitCurve(rows, keys) : null;
+    const slope = lastDep && lastDep.fit ? lastDep.fit.beta[1] : null;
+    sweet = { cv, slope, knee: cv ? findKnee(cv, slope) : null };
+    drawAgeCurve();
+    renderOwnership();
+  }
+
+  function drawAgeCurve(){
+    const box = $("c-age"), sw = $("cv-sweet"), note = $("cv-note");
+    box.innerHTML = "";
+    const { cv, slope, knee } = sweet || {};
+    if (!cv){
+      $("cv-sub").textContent = "";
+      sw.hidden = true; note.hidden = true;
+      box.innerHTML = '<p class="note">符合條件的車太少，畫不出車齡曲線。請放寬車型、配備或來源條件。</p>';
+      return;
+    }
+    sw.hidden = false; note.hidden = false;
+    const mk = D.models[state.m], ry = D.refresh_year[mk], ra = SNAP_YEAR - ry;
+    const a0 = cv.ages[0], minA = a0, maxA = cv.ages[cv.ages.length - 1];
+    const rel = a => Math.exp(cv.idx.get(a) - cv.idx.get(a0)) * 100;
+    const kmPct = Math.expm1(cv.fit.beta[1]) * 100;
+    $("cv-sub").textContent = `由同條件 ${cv.n} 台在售車估計，里程固定下比較各車齡的開價（另外每多 1 萬公里 `
+      + `${kmPct < 0 ? "−" : "+"}${Math.abs(kmPct).toFixed(1)}%）。`;
+
+    // 甜蜜點說明
+    if (knee && knee.age != null){
+      const k = knee.age, steep = knee.steps.filter(s => s.d > knee.thr);
+      const genSteep = steep.some(s => s.a <= ra && s.b >= ra);
+      sw.innerHTML = `<b>甜蜜點：${k} 年車（${SNAP_YEAR - k} 年式）。</b>`
+        + `從這個車齡往後，每年跌幅都在 ${(knee.thr * 100).toFixed(1)}% 以內`
+        + `（這個車系同世代的正常跌幅約每年 ${(knee.rate * 100).toFixed(1)}%）；`
+        + (steep.length
+            ? `再新一點就會碰上前段的陡降（${steep.map(s => `${s.a}→${s.b} 年每年 −${(s.d * 100).toFixed(0)}%`).join("、")}）`
+              + (genSteep ? `，而這段陡降主要來自 ${ry} 年的改款：新一代上市，舊一代整批降價。` : "。")
+            : "曲線從頭就很平緩。");
+    } else if (knee && knee.reason === "none"){
+      sw.innerHTML = "<b>目前看不出轉折點。</b>往後每一段都還有明顯高於正常的跌幅，曲線還沒轉平；可以等下個月資料再看。";
+    } else {
+      sw.innerHTML = "<b>還判斷不出甜蜜點。</b>樣本夠多（5 台以上）的車齡不到三個，看不出曲線在哪裡轉平。";
+    }
+    note.textContent = "這是今天在售車的橫斷面：不同車齡的車也出自不同世代，所以跨過改款年的那段跌幅，"
+      + "包含新舊世代本身的價差，不全是「車變舊」造成的。資料累積幾個月後，會更清楚。";
+
+    // 圖
+    const Wd = Math.max(300, box.clientWidth || 600), H = 270;
+    const M = { l: 44, r: 16, t: 40, b: 46 };
+    const iw = Wd - M.l - M.r, ih = H - M.t - M.b;
+    const span = maxA - minA + 1;
+    const sx = a => M.l + (a - minA + 0.5) / span * iw;
+    const t = niceTicks(Math.min(...cv.ages.map(rel)) * 0.9, 106, 4);
+    const sy = v => M.t + ih - (v - t.lo) / (t.hi - t.lo) * ih;
+    const svg = el("svg", { viewBox: `0 0 ${Wd} ${H}`, role: "img", "aria-label": "各車齡的相對開價" });
+
+    if (ra >= minA - 0.5 && ra <= maxA + 0.5){          // 改款年
+      const w = iw / span;
+      svg.appendChild(el("rect", { x: sx(ra) - w / 2, y: M.t, width: w, height: ih }, "fill:var(--sunk);opacity:.7"));
+      const lab = el("text", { x: sx(ra), y: M.t - 8, "text-anchor": "middle" },
+        "font-family:var(--f-body);font-size:11px;fill:var(--ink-2)");
+      lab.textContent = `${ry} 改款`; svg.appendChild(lab);
+      if (sx(ra) - M.l > 60){
+        const l = el("text", { x: M.l + 2, y: M.t - 8 }, "font-family:var(--f-body);font-size:10.5px;fill:var(--ink-3)");
+        l.textContent = "← 新世代"; svg.appendChild(l);
+      }
+      if (M.l + iw - sx(ra) > 60){
+        const r = el("text", { x: M.l + iw - 2, y: M.t - 8, "text-anchor": "end" }, "font-family:var(--f-body);font-size:10.5px;fill:var(--ink-3)");
+        r.textContent = "舊世代 →"; svg.appendChild(r);
+      }
+    }
+    for (const v of t.ticks){
+      svg.appendChild(el("line", { x1: M.l, x2: M.l + iw, y1: sy(v), y2: sy(v) }, "stroke:var(--line);stroke-width:1"));
+      const tx = el("text", { x: M.l - 8, y: sy(v) + 4, "text-anchor": "end" }, TXT); tx.textContent = v; svg.appendChild(tx);
+    }
+    for (let a = minA; a <= maxA; a++){
+      const t1 = el("text", { x: sx(a), y: H - 24, "text-anchor": "middle" }, TXT);
+      t1.textContent = `${a} 年`; svg.appendChild(t1);
+      const t2 = el("text", { x: sx(a), y: H - 10, "text-anchor": "middle" }, "font-family:var(--f-mono);font-size:10px;fill:var(--ink-3);opacity:.8");
+      t2.textContent = SNAP_YEAR - a; svg.appendChild(t2);
+    }
+    const ay = el("text", { x: 0, y: 12, "text-anchor": "start" }, TXT);
+    ay.textContent = `相對價格（${a0} 年車＝100）`; svg.appendChild(ay);
+
+    // 連線與每段年化跌幅
+    const thr = knee && knee.thr != null ? knee.thr : Infinity;
+    cv.ages.slice(1).forEach((b, i) => {
+      const a = cv.ages[i], d = 1 - Math.exp((cv.idx.get(b) - cv.idx.get(a)) / (b - a));
+      svg.appendChild(el("line", { x1: sx(a), y1: sy(rel(a)), x2: sx(b), y2: sy(rel(b)) },
+        `stroke:var(--brand);stroke-width:2;${b - a > 1 ? "stroke-dasharray:5 4" : ""}`));
+      const lab = el("text", { x: (sx(a) + sx(b)) / 2, y: Math.min(sy(rel(a)), sy(rel(b))) - 9, "text-anchor": "middle" },
+        `font-family:var(--f-mono);font-size:10.5px;font-weight:600;fill:${d > thr ? "var(--brand)" : "var(--ink-3)"}`);
+      lab.textContent = `−${(d * 100).toFixed(0)}%/年`; svg.appendChild(lab);
+    });
+    for (const a of cv.ages){
+      const n = cv.cnt.get(a), x = sx(a), y = sy(rel(a));
+      if (knee && knee.age === a){
+        svg.appendChild(el("circle", { cx: x, cy: y, r: 11 }, "fill:none;stroke:var(--brand);stroke-width:2"));
+        const s = el("text", { x, y: y + 26, "text-anchor": "middle" },
+          "font-family:var(--f-body);font-size:12px;font-weight:700;fill:var(--brand)");
+        s.textContent = "甜蜜點"; svg.appendChild(s);
+      }
+      const c = el("circle", { cx: x, cy: y, r: 5.5 }, n >= 5
+        ? "fill:var(--brand);stroke:var(--surface);stroke-width:2"
+        : "fill:var(--surface);stroke:var(--brand);stroke-width:2");
+      const i = cv.ages.indexOf(a), prev = i ? cv.ages[i - 1] : null;
+      const html = `<b>${a} 年車（${SNAP_YEAR - a} 年式）</b><br>相對價格 ${rel(a).toFixed(1)}　在售 ${n} 台`
+        + (prev != null ? `<br>比 ${prev} 年車每年少 ${((1 - Math.exp((cv.idx.get(a) - cv.idx.get(prev)) / (a - prev))) * 100).toFixed(1)}%` : "");
+      c.addEventListener("pointermove", e => showTip(e, html));
+      c.addEventListener("pointerleave", hideTip);
+      svg.appendChild(c);
+    }
+    box.appendChild(svg);
+  }
+
+  /* ---------- 持有成本 ----------
+     假設：N 年後這台車的價格，等於今天同車齡、同里程的車。
+     買入里程取該車齡在售車的中位里程，之後每年加上使用者設定的里程。 */
+  function renderOwnership(){
+    const H = state.h, ak = state.ak;
+    [...document.querySelectorAll("#f-hold .chip")].forEach(b =>
+      b.setAttribute("aria-pressed", String(Number(b.dataset.v) === H)));
+    $("ak").value = ak;
+    $("ak-out").textContent = `${ak} 萬公里`;
+    $("own-sell-h").textContent = `${H} 年後賣價`;
+    const body = $("own-body"), sum = $("own-sum"), note = $("own-note");
+    const { cv, slope, knee } = sweet || {};
+    if (!cv){
+      body.innerHTML = '<tr><td colspan="6" class="muted" style="text-align:left">符合條件的車太少，無法試算。</td></tr>';
+      sum.textContent = ""; note.hidden = true; return;
+    }
+    note.hidden = false;
+    const ra = SNAP_YEAR - D.refresh_year[D.models[state.m]];
+    const rows = cv.ages.map(a => {
+      const km0 = cv.typicalKm.get(a);
+      const buy = priceAt(cv, a, km0, slope), sell = priceAt(cv, a + H, km0 + H * ak * 1e4, slope);
+      if (!buy || !sell) return null;
+      const per = (buy.p - sell.p) / H;
+      return { a, km0, buy: buy.p, sell: sell.p, kind: sell.kind, per, pct: per / buy.p,
+               gen: a <= ra && a + H >= ra, battery: a + H > BATTERY_YEARS, n: cv.cnt.get(a) };
+    }).filter(Boolean);
+    const k = knee && knee.age != null ? knee.age : null;
+    body.innerHTML = rows.map(r => {
+      const flags = [];
+      if (r.a === k) flags.push('<span class="flag best">甜蜜點</span>');
+      if (r.kind === "extrap") flags.push('<span class="flag">賣價為推估</span>');
+      if (r.kind === "interp") flags.push('<span class="flag">賣價為內插</span>');
+      if (r.gen) flags.push('<span class="flag hot">含改款斷點</span>');
+      if (r.battery) flags.push('<span class="flag hot">賣時超過 8 年</span>');
+      if (r.n < 5) flags.push('<span class="flag">樣本少</span>');
+      return `<tr class="${r.a === k ? "best" : ""}">
+        <td>${r.a} 年車 <span class="muted">${SNAP_YEAR - r.a}</span></td>
+        <td>${fmt1(r.buy)}</td><td>${fmt1(r.sell)}</td><td><b>${fmt1(r.per)}</b></td>
+        <td>${(r.pct * 100).toFixed(1)}%</td><td class="flags">${flags.join("")}</td></tr>`;
+    }).join("");
+
+    const best = rows.find(r => r.a === k), young = rows[0];
+    if (best){
+      sum.innerHTML = `開 <b>${H} 年</b>、每年 <b>${ak} 萬公里</b>：買<b>甜蜜點的 ${best.a} 年車</b>，買價約 ${fmt1(best.buy)} 萬，`
+        + `${H} 年後約 ${fmt1(best.sell)} 萬，<b>每年約花 ${fmt1(best.per)} 萬</b>（買價的 ${(best.pct * 100).toFixed(1)}%）。`
+        + (young && young.a !== best.a
+            ? `買最新的 ${young.a} 年車則每年約花 ${fmt1(young.per)} 萬，多 ${fmt1(young.per - best.per)} 萬。` : "");
+    } else {
+      sum.textContent = `開 ${H} 年、每年 ${ak} 萬公里的試算如下。目前判斷不出甜蜜點，可以比較各車齡的每年成本與佔買價比例。`;
+    }
+    note.textContent = `單看「每年成本」，永遠是越舊越省——車價本來就低，所以甜蜜點不是表中最便宜的那一列，`
+      + `而是跌最兇的那段已經過去、車又盡量新的位置。試算假設 ${H} 年後這台車的價格，等於今天同車齡、同里程的車；`
+      + `標「含改款斷點」的列，推算路徑跨過了今天新舊世代的價差，未來會不會再有一次同樣的跌幅，要看下一代何時上市。`
+      + `超出資料範圍的年份以同世代年跌率推估。`;
+  }
+
+  /* ---------- 這台划算嗎 ----------
+     以同車系全部在售車（不套用頁面篩選）估計：車齡、里程、車型、配備、來源。
+     使用者看中的那台不知道來自哪個平台，來源取樣本平均。 */
+  let deal = { model: -1, cv: null, slope: null };
+  function fitLinearSlope(rows){
+    let keys = ["fam", "adas", "src", "gen"];
+    while (true){
+      const ctl = [];
+      for (const key of keys){
+        const c = new Map();
+        rows.forEach(r => c.set(r[key], (c.get(r[key]) || 0) + 1));
+        const base = [...c.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        for (const lv of c.keys()) if (lv !== base) ctl.push({ key, lv });
+      }
+      const X = rows.map(r => [1, ageOf(r), r.km / 1e4, ...ctl.map(c => r[c.key] === c.lv ? 1 : 0)]);
+      if (rows.length - X[0].length >= 10){
+        const fit = ols(X, rows.map(r => Math.log(r.price)));
+        if (fit) return fit.beta[1];
+      }
+      if (!keys.length) return null;
+      keys = keys.slice(0, -1);
+    }
+  }
+  function renderDeal(){
+    if (deal.model !== state.m){
+      const rows = ROWS.filter(r => r.month === LATEST && r.model === state.m);
+      deal = { model: state.m, rows, cv: rows.length >= 12 ? fitCurve(rows, ["fam", "adas", "src"]) : null,
+               slope: rows.length >= 12 ? fitLinearSlope(rows) : null };
+      const years = [...new Set(rows.map(r => r.year))].sort((a, b) => b - a);
+      const yMin = Math.min(...years), yMax = Math.max(...years);
+      const opts = [];
+      for (let y = yMax; y >= yMin; y--) opts.push(`<option value="${y}">${y}</option>`);
+      $("d-year").innerHTML = opts.join("");
+      $("d-fam").innerHTML = '<option value="">不確定</option>' + optionsFor("f")
+        .map(o => `<option value="${o.v}">${o.label}</option>`).join("");
+      $("d-adas").innerHTML = '<option value="">不確定</option>' + D.adas.order
+        .map((c, i) => c === "UNKNOWN" ? "" : `<option value="${i}">${D.adas.label[c]}</option>`).join("");
+      // 預設帶入頁面目前的條件，讓卡片一打開就有一個實際的例子
+      const yDef = state.y !== "all" ? Number(state.y) : Math.round(medianOf(rows.map(r => r.year)));
+      $("d-year").value = yDef;
+      $("d-km").value = (state.k / 1e4).toFixed(1);
+      $("d-fam").value = state.f !== "all" ? state.f : "";
+      $("d-adas").value = state.a !== "all" && D.adas.order[state.a] !== "UNKNOWN" ? state.a : "";
+      const p = deal.cv && priceAt(deal.cv, SNAP_YEAR - yDef, state.k, deal.slope,
+        { fam: state.f !== "all" ? Number(state.f) : null, adas: $("d-adas").value !== "" ? Number($("d-adas").value) : null });
+      $("d-price").value = p ? (p.p / 1e4).toFixed(1) : "";
+    }
+    renderDealResult();
+  }
+  function renderDealResult(){
+    const out = $("deal-out"), cv = deal.cv;
+    if (!cv){ out.innerHTML = '<p class="note">這個車系的在售車太少，無法試算。</p>'; return; }
+    const year = Number($("d-year").value), km = Number($("d-km").value) * 1e4, ask = Number($("d-price").value) * 1e4;
+    if (!year || !(km >= 0) || !(ask > 0)){ out.innerHTML = '<p class="note">請輸入年份、里程與開價。</p>'; return; }
+    const fam = $("d-fam").value, adas = $("d-adas").value;
+    const levels = { fam: fam !== "" ? Number(fam) : null, adas: adas !== "" ? Number(adas) : null };
+    const pr = priceAt(cv, SNAP_YEAR - year, km, deal.slope, levels);
+    if (!pr){ out.innerHTML = '<p class="note">這個年份超出資料範圍，無法估計。</p>'; return; }
+    const r0 = Math.log(ask) - Math.log(pr.p), res = cv.resid;
+    const q25 = q(res, .25), q75 = q(res, .75);
+    const cheaper = res.filter(v => v > r0).length / res.length;
+    const diff = (ask / pr.p - 1) * 100;
+    const v = r0 < q25 ? ["low", "開價偏低"] : r0 > q75 ? ["high", "開價偏高"] : ["fair", "落在行情內"];
+    const advice = {
+      low: "價格有吸引力，但先確認車況、事故與泡水紀錄、電池健康度——明顯低於行情的車常有原因。",
+      fair: "價格合理，可以就車況與配備再談一點。",
+      high: `開價高於多數同類車，有議價空間，可以拿合理價 ${fmt1(pr.p)} 萬當參考去談。`,
+    }[v[0]];
+    const unsure = [fam === "" ? "車型" : null, adas === "" ? "配備" : null].filter(Boolean);
+    out.innerHTML = `<span class="verdict ${v[0]}">${v[1]}</span>
+      <p class="line">同條件的合理價約 <b>${fmt1(pr.p)} 萬</b>，中間一半落在 <b>${fmt1(pr.p * Math.exp(q25))}–${fmt1(pr.p * Math.exp(q75))} 萬</b>。</p>
+      <p class="line">${Math.abs(diff) < 0.5 ? "這台開價與合理價幾乎相同" : `這台開價比合理價${diff < 0 ? "低" : "高"} <b>${Math.abs(diff).toFixed(1)}%</b>`}，比 <b>${(cheaper * 100).toFixed(0)}%</b> 的同類在售車划算。</p>
+      <p class="line">${advice}</p>
+      <p class="hint">由 ${D.model_label[D.models[state.m]]} ${cv.n} 台在售車估計`
+      + (unsure.length ? `；${unsure.join("、")}不確定時以在售車的平均組成估計` : "")
+      + (pr.kind === "extrap" ? "；這個年份超出資料範圍，是推估值" : pr.kind === "interp" ? "；這個年份在售車太少，由前後年份內插" : "")
+      + "。</p>";
   }
 
   function renderResults(){
@@ -807,7 +1244,7 @@ footer p+p{margin-top:6px}
     new ResizeObserver(() => {
       const w = $("c-km").clientWidth;
       if (w === lastW) return;
-      lastW = w; clearTimeout(rt); rt = setTimeout(renderResults, 80);
+      lastW = w; clearTimeout(rt); rt = setTimeout(() => { renderResults(); drawAgeCurve(); }, 80);
     }).observe($("c-km"));
   window.addEventListener("hashchange", () => { readState(); update(); });
 })();
