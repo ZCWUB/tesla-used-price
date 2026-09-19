@@ -125,6 +125,18 @@ button{font:inherit;color:inherit}
   font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .warn{background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:10px 12px;font-size:.875rem}
 
+.dp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.dp{background:var(--surface-2);border-radius:10px;padding:14px;min-width:0}
+.dp .k{font-size:.875rem;color:var(--ink-2)}
+.dp .v{display:flex;align-items:baseline;gap:4px;margin-top:4px}
+.dp .v b{font-family:var(--f-dsp);font-weight:700;font-size:clamp(1.9rem,6vw,2.4rem);
+  letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.dp .v span{font-size:1rem;font-weight:600;color:var(--ink-2)}
+.dp .w{font-family:var(--f-mono);font-size:.8125rem;color:var(--ink-2);margin-top:6px}
+.dp .tag{display:inline-block;margin-top:8px;font-size:.75rem;color:var(--warn-ink);
+  background:var(--warn-bg);border-radius:999px;padding:2px 9px}
+.dp.na .v b{color:var(--ink-3);font-size:1.25rem}
+
 .chart{position:relative;margin-top:12px;min-height:220px}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:.8125rem;color:var(--ink-2)}
@@ -200,9 +212,19 @@ footer p+p{margin-top:6px}
         <dl class="stats">
           <div><dt>在售台數</dt><dd id="st-n"></dd></div>
           <div><dt>全里程中位數</dt><dd id="st-med"></dd></div>
-          <div><dt>開價區間</dt><dd id="st-rng"></dd></div>
+          <div><dt>開價區間（萬）</dt><dd id="st-rng"></dd></div>
         </dl>
         <div class="warn" id="warn" hidden></div>
+      </section>
+
+      <section class="card" aria-live="polite">
+        <h2>跌價幅度</h2>
+        <p class="sub" id="dp-sub"></p>
+        <div class="dp-grid">
+          <div class="dp" id="dp-age"></div>
+          <div class="dp" id="dp-km"></div>
+        </div>
+        <p class="note" id="dp-note"></p>
       </section>
 
       <section class="card">
@@ -440,7 +462,107 @@ footer p+p{margin-top:6px}
     state.k = Math.min(state.k, maxKm);
     slider.value = state.k;
     renderResults();
+    renderDepreciation();
     writeState();
+  }
+
+  /* ---------- 跌價幅度 ----------
+     ln(開價) = a + b·車齡 + c·里程萬公里 + 其他條件的虛擬變數
+     直接比新舊車的價差會把里程、車型、世代的差異全算成折舊，所以一起放進迴歸：
+     b 是「里程不變、多一年」的跌幅，c 是「年份不變、多跑一萬公里」的跌幅。
+     已被篩選固定的條件不必控制；年份篩選在這裡不套用——同一年份的車算不出每年跌幅。 */
+  const SNAP_YEAR = Number(D.months[LATEST].slice(0, 4));
+  const CONTROLS = [["f", "fam", "車型"], ["a", "adas", "配備"], ["s", "src", "來源"], ["g", "gen", "世代"]];
+
+  function ols(X, y){
+    const n = X.length, k = X[0].length;
+    const A = Array.from({ length: k }, (_, a) => {
+      const row = new Array(2 * k).fill(0); row[k + a] = 1; return row;
+    });
+    for (const xi of X) for (let a = 0; a < k; a++) for (let b = 0; b < k; b++) A[a][b] += xi[a] * xi[b];
+    for (let c = 0; c < k; c++){                       // Gauss-Jordan 求 (X'X)⁻¹
+      let p = c;
+      for (let r = c + 1; r < k; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+      if (Math.abs(A[p][c]) < 1e-9) return null;       // 共線，交給呼叫端減少控制變數
+      [A[c], A[p]] = [A[p], A[c]];
+      const d = A[c][c];
+      for (let j = 0; j < 2 * k; j++) A[c][j] /= d;
+      for (let r = 0; r < k; r++) if (r !== c && A[r][c]){
+        const f = A[r][c];
+        for (let j = 0; j < 2 * k; j++) A[r][j] -= f * A[c][j];
+      }
+    }
+    const inv = A.map(r => r.slice(k));
+    const xty = new Array(k).fill(0);
+    X.forEach((xi, i) => { for (let a = 0; a < k; a++) xty[a] += xi[a] * y[i]; });
+    const beta = inv.map(r => r.reduce((s, v, j) => s + v * xty[j], 0));
+    let rss = 0;
+    X.forEach((xi, i) => { const f = xi.reduce((s, v, a) => s + v * beta[a], 0); rss += (y[i] - f) ** 2; });
+    const s2 = rss / (n - k);
+    return { beta, se: inv.map((r, a) => Math.sqrt(Math.max(0, s2 * r[a]))), n, k };
+  }
+
+  function estimateDepreciation(){
+    const rows = rowsFor(LATEST, "y");
+    if (rows.length < 12) return { rows, fit: null, reason: "few" };
+    if (new Set(rows.map(r => r.year)).size < 2) return { rows, fit: null, reason: "oneyear" };
+    let facets = CONTROLS.filter(([f]) => state[f] === "all");
+    while (true){
+      const cols = [];                                  // 每個控制條件：以最常見的類別為基準
+      for (const [, key] of facets){
+        const cnt = new Map();
+        rows.forEach(r => cnt.set(r[key], (cnt.get(r[key]) || 0) + 1));
+        const base = [...cnt.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        for (const lv of cnt.keys()) if (lv !== base) cols.push(r => r[key] === lv ? 1 : 0);
+      }
+      const X = rows.map(r => [1, SNAP_YEAR - r.year, r.km / 1e4, ...cols.map(fn => fn(r))]);
+      const k = X[0].length;
+      if (rows.length - k >= 10){
+        const fit = ols(X, rows.map(r => Math.log(r.price)));
+        if (fit) return { rows, fit, controls: facets.map(c => c[2]) };
+      }
+      if (!facets.length) return { rows, fit: null, reason: "few" };
+      facets = facets.slice(0, -1);                     // 樣本撐不起全部控制時，從世代開始逐一拿掉
+    }
+  }
+
+  function renderDepreciation(){
+    const est = estimateDepreciation();
+    const selMed = stats(rowsFor(LATEST)).med || stats(est.rows).med;
+    const box = (id, label, idx) => {
+      const el = $(id);
+      if (!est.fit){
+        el.className = "dp na";
+        el.innerHTML = `<p class="k">${label}</p><p class="v"><b>無法估計</b></p>`;
+        return;
+      }
+      const b = est.fit.beta[idx], t = b / est.fit.se[idx];
+      const pct = Math.expm1(b) * 100, down = pct < 0;
+      const amt = selMed ? Math.abs(selMed * Math.expm1(b)) / 1e4 : null;
+      el.className = "dp";
+      el.innerHTML = `<p class="k">${label}約${down ? "跌" : "漲"}</p>
+        <p class="v"><b>${Math.abs(pct).toFixed(1)}</b><span>%</span></p>
+        ${amt != null ? `<p class="w">約 ${amt.toFixed(1)} 萬</p>` : ""}
+        ${Math.abs(t) < 2 ? '<span class="tag">差異不明顯，僅供參考</span>' : ""}`;
+    };
+    box("dp-age", "每多 1 年", 1);
+    box("dp-km", "每多 1 萬公里", 2);
+
+    const note = $("dp-note");
+    if (!est.fit){
+      $("dp-sub").textContent = "";
+      note.textContent = est.reason === "oneyear"
+        ? "符合條件的車都是同一個年份，算不出每年的跌幅。請放寬車型、配備或世代條件。"
+        : `符合條件的車只有 ${est.rows.length} 台，不足以可靠地估計跌幅。請放寬條件。`;
+      return;
+    }
+    $("dp-sub").textContent = `由同條件 ${est.fit.n} 台在售車推估`
+      + (state.y !== "all" ? "（估算時不限年份，需要不同年份的車才算得出每年跌幅）" : "")
+      + (selMed ? `；金額以目前條件的中位價 ${fmt1(selMed)} 萬換算` : "") + "。";
+    note.textContent = (est.controls.length
+        ? `已排除${est.controls.join("、")}差異的影響，`
+        : "")
+      + "數字是「其他條件相同時」多一年、多一萬公里的開價差距。這是在售車開價之間的統計關係，實際成交與個別車況會有出入。";
   }
 
   function renderResults(){
@@ -480,7 +602,7 @@ footer p+p{margin-top:6px}
 
     $("st-n").textContent = st.n + " 台";
     $("st-med").textContent = st.n ? fmt1(st.med) + " 萬" : "—";
-    $("st-rng").textContent = st.n ? `${fmt0(st.min)}–${fmt0(st.max)} 萬` : "—";
+    $("st-rng").textContent = st.n ? `${fmt0(st.min)}–${fmt0(st.max)}` : "—";
 
     const warn = $("warn");
     if (st.n > 0 && st.n < 5){
