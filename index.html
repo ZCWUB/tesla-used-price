@@ -194,6 +194,14 @@ td.muted{color:var(--ink-3)}
 .tip b{font-family:var(--f-mono)}
 footer{font-size:.8125rem;color:var(--ink-3);line-height:1.7;padding:6px 2px 0}
 footer p+p{margin-top:6px}
+.legal{display:grid;gap:18px;border-top:1px solid var(--line);padding-top:18px;margin-top:6px}
+@media (min-width:720px){.legal{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:28px}}
+.legal h3{font-family:var(--f-body);font-size:.8125rem;font-weight:600;color:var(--ink-2);margin:0 0 6px}
+.legal ul,.legal ol{margin:0 0 8px;padding-left:1.25em}
+.legal li+li{margin-top:4px}
+.legal b{color:var(--ink-2);font-weight:600}
+.legal a{color:var(--ink-2);text-underline-offset:2px}
+.legal a:hover{color:var(--brand)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -341,9 +349,29 @@ footer p+p{margin-top:6px}
         </div>
       </section>
 
-      <footer>
-        <p>顯示的是賣方<b>開價</b>，不是成交價。同一台車可能同時刊登在多個平台，會被重複計入。</p>
-        <p>資料來源：8891 中古車、JackEV、Tesla 官方認證中古車之公開刊登資訊，每月彙整一次；統計僅供參考。</p>
+      <footer class="legal">
+        <section>
+          <h3>資料來源</h3>
+          <ul>
+            <li>8891 中古車網（auto.8891.com.tw）公開刊登之開價資訊</li>
+            <li>JackEV 傑克電動車（jackev.com）公開刊登之開價資訊</li>
+            <li>Tesla 台灣官方認證中古車庫存（tesla.com）</li>
+          </ul>
+          <p>每月彙整一次，本頁資料截至 <b id="legal-date"></b>。本站僅呈現統計彙整結果（中位數、區間、走勢與推估值），不轉載原始刊登內容、照片或賣家聯絡資訊。</p>
+        </section>
+        <section>
+          <h3>免責聲明</h3>
+          <ol>
+            <li>本站數據為各平台賣方<b>開價</b>之統計，並非實際成交價，亦不代表任何特定車輛之實際價值。</li>
+            <li>跌價幅度、甜蜜點、持有成本、合理價等數字，皆依公開資料以統計模型推估，可能因樣本不足、刊登資訊錯誤，或同一車輛同時刊登於多個平台而重複計入等原因產生誤差。本站不保證資料之正確性、完整性與即時性。</li>
+            <li>本站內容僅供參考，不構成任何購車、售車、投資或財務上之建議。使用者應自行查證車況（包括事故、泡水、電池健康度等）並審慎判斷；因使用或信賴本站資訊所生之任何損失，本站不負賠償責任。</li>
+            <li>Tesla、Model S、Model 3、Model X、Model Y 等名稱為其各自權利人之商標。本站與 Tesla、8891、JackEV
+              均無任何合作、授權或關聯。</li>
+            <li>如權利人認為本站內容有不當之處，請透過
+              <a href="https://github.com/ZCWUB/tesla-used-price/issues" target="_blank" rel="noopener noreferrer">GitHub</a>
+              告知，我們將儘速處理或移除。</li>
+          </ol>
+        </section>
       </footer>
     </main>
   </div>
@@ -1234,6 +1262,7 @@ footer p+p{margin-top:6px}
   /* ---------- 啟動 ---------- */
   $("fresh").textContent = D.latest_snapshot;
   $("next").textContent = D.next_update;
+  $("legal-date").textContent = D.latest_snapshot;
   // 桌機有側欄空間，進階條件預設展開；手機預設收合，讓答案先出現
   if (window.matchMedia && matchMedia("(min-width:920px)").matches) $("more").open = true;
   readState();
